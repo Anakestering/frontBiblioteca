@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function Cadastro() {
     const navigate = useNavigate();
 
     const [form, setForm] = useState({
         nome: "",
+        telefone: "",
         nascimento: "",
         cpf: "",
+        tipoUsuario: "",
 
         cep: "",
         cidade: "",
@@ -15,19 +18,19 @@ export default function Cadastro() {
         bairro: "",
 
         email: "",
-        usuario: "",
-        senha: "",
-        confirmarSenha: ""
+        senha: ""
     });
+
+    const [confirmarSenha, setConfirmarSenha] = useState("");
 
     const [erro, setErro] = useState("");
     const [mostrarSenha, setMostrarSenha] = useState(false);
     const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
 
-    const senhasDiferentes =
-        form.confirmarSenha &&
-        form.senha !== form.confirmarSenha;
 
+    const senhasDiferentes =
+        confirmarSenha &&
+        form.senha !== confirmarSenha;
 
     async function buscarCep(cepDigitado) {
         setErro("");
@@ -57,8 +60,22 @@ export default function Cadastro() {
     }
 
 
+
+
+
+
+    /*-----------------------  MÁSCARAS  ------------------------*/
+
     async function handleChange(e) {
         let { name, value } = e.target;
+
+        // máscara CEP
+        if (name === "cep") {
+            value = value
+                .replace(/\D/g, "")
+                .replace(/(\d{5})(\d)/, "$1-$2")
+                .slice(0, 9);
+        }
 
         // máscara CPF
         if (name === "cpf") {
@@ -70,12 +87,33 @@ export default function Cadastro() {
                 .slice(0, 14);
         }
 
-        // máscara CEP
-        if (name === "cep") {
+        // máscara telefone
+        if (name === "telefone") {
             value = value
                 .replace(/\D/g, "")
-                .replace(/(\d{5})(\d)/, "$1-$2")
-                .slice(0, 9);
+                .slice(0, 11);
+
+            if (value.length <= 2) {
+                value = value.replace(/(\d{0,2})/, "($1");
+            }
+            else if (value.length <= 6) {
+                value = value.replace(
+                    /(\d{2})(\d+)/,
+                    "($1) $2"
+                );
+            }
+            else if (value.length <= 10) {
+                value = value.replace(
+                    /(\d{2})(\d{4})(\d+)/,
+                    "($1) $2-$3"
+                );
+            }
+            else {
+                value = value.replace(
+                    /(\d{2})(\d{5})(\d+)/,
+                    "($1) $2-$3"
+                );
+            }
         }
 
         setForm(prev => ({
@@ -83,8 +121,7 @@ export default function Cadastro() {
             [name]: value
         }));
 
-
-        // busca automática do CEP
+        // busca automática CEP
         if (name === "cep") {
             const cepNumerico = value.replace(/\D/g, "");
 
@@ -94,6 +131,10 @@ export default function Cadastro() {
         }
     }
 
+
+
+
+    /*-----------------  ENVIO DADOS  -----------------*/
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -111,7 +152,8 @@ export default function Cadastro() {
                     },
                     body: JSON.stringify({
                         ...form,
-                        cpf: form.cpf.replace(/\D/g, "")
+                        cpf: form.cpf.replace(/\D/g, ""),
+                        telefone: form.telefone.replace(/\D/g, "")
                     })
                 }
             );
@@ -128,6 +170,10 @@ export default function Cadastro() {
             console.error(err);
         }
     }
+
+
+
+    /*---------------------  UI  ----------------------*/
 
     return (
         <div className="min-h-screen bg-gray-100 flex justify-center py-10">
@@ -147,8 +193,9 @@ export default function Cadastro() {
                             Dados Pessoais
                         </h2>
 
-                        <div className="grid grid-cols-2 gap-5">
+                        <div className="grid grid-cols-3 gap-5">
 
+                            {/* Nome */}
                             <div className="col-span-2">
                                 <label className="block mb-2 font-medium">
                                     Nome Completo *
@@ -158,6 +205,24 @@ export default function Cadastro() {
                                     name="nome"
                                     value={form.nome}
                                     onChange={handleChange}
+                                    placeholder="Digite seu nome completo"
+                                    required
+                                    className="w-full h-12 border rounded-md px-4"
+                                />
+                            </div>
+
+
+                            {/* Telefone */}
+                            <div>
+                                <label className="block mb-2 font-medium">
+                                    Telefone *
+                                </label>
+
+                                <input
+                                    name="telefone"
+                                    value={form.telefone}
+                                    onChange={handleChange}
+                                    placeholder="(00) 00000-0000"
                                     required
                                     className="w-full h-12 border rounded-md px-4"
                                 />
@@ -193,6 +258,37 @@ export default function Cadastro() {
                                     placeholder="000.000.000-00"
                                     className="w-full h-12 border rounded-md px-4"
                                 />
+                            </div>
+
+                            {/* TipoUsuario */}
+                            <div>
+                                <label className="block mb-2 font-medium">
+                                    Tipo de Usuário *
+                                </label>
+
+                                <select
+                                    name="tipoUsuario"
+                                    value={form.tipoUsuario}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full h-12 border rounded-md px-4 bg-white"
+                                >
+                                    <option value="">
+                                        Selecione Opção
+                                    </option>
+
+                                    <option value="ESTUDANTE">
+                                        Estudante
+                                    </option>
+
+                                    <option value="PROFESSOR">
+                                        Professor
+                                    </option>
+
+                                    <option value="RESPONSAVEL">
+                                        Responsável
+                                    </option>
+                                </select>
                             </div>
 
                         </div>
@@ -277,23 +373,6 @@ export default function Cadastro() {
                                 />
                             </div>
 
-
-                            <div>
-                                <label className="block mb-2 font-medium">
-                                    Usuário *
-                                </label>
-
-                                <input
-                                    name="usuario"
-                                    required
-                                    value={form.usuario}
-                                    onChange={handleChange}
-                                    className="w-full h-12 border rounded-md px-4"
-                                />
-                            </div>
-
-
-
                             {/* SENHA */}
                             <div>
                                 <label className="block mb-2 font-medium">
@@ -312,12 +391,14 @@ export default function Cadastro() {
 
                                     <button
                                         type="button"
-                                        onClick={() =>
-                                            setMostrarSenha(!mostrarSenha)
-                                        }
-                                        className="absolute right-4 top-3 text-blue-700 text-sm"
+                                        onClick={() => setMostrarSenha(!mostrarSenha)}
+                                        className="absolute right-4 top-3 text-gray-600"
                                     >
-                                        {mostrarSenha ? "Ocultar" : "Ver"}
+                                        {mostrarSenha ? (
+                                            <EyeOff size={20} />
+                                        ) : (
+                                            <Eye size={20} />
+                                        )}
                                     </button>
                                 </div>
                             </div>
@@ -337,10 +418,11 @@ export default function Cadastro() {
                                                 ? "text"
                                                 : "password"
                                         }
-                                        name="confirmarSenha"
+                                        value={confirmarSenha}
+                                        onChange={(e) =>
+                                            setConfirmarSenha(e.target.value)
+                                        }
                                         required
-                                        value={form.confirmarSenha}
-                                        onChange={handleChange}
                                         className="w-full h-12 border rounded-md px-4 pr-20"
                                     />
 
@@ -351,11 +433,13 @@ export default function Cadastro() {
                                                 !mostrarConfirmacao
                                             )
                                         }
-                                        className="absolute right-4 top-3 text-blue-700 text-sm"
+                                        className="absolute right-4 top-3 text-gray-600"
                                     >
-                                        {mostrarConfirmacao
-                                            ? "Ocultar"
-                                            : "Ver"}
+                                        {mostrarConfirmacao ? (
+                                            <EyeOff size={20} />
+                                        ) : (
+                                            <Eye size={20} />
+                                        )}
                                     </button>
                                 </div>
 
@@ -365,7 +449,6 @@ export default function Cadastro() {
                                     </p>
                                 )}
                             </div>
-
                         </div>
                     </div>
 
