@@ -12,7 +12,7 @@ export default function Login() {
             <div className="w-[430px] bg-white px-14 py-16 rounded-md">
 
                 <h1 className="text-3xl font-bold text-gray-900 mb-10">
-                    Bem-vindo ao AVA!
+                    Bem-vindo!
                 </h1>
 
                 {/* Usuário */}
@@ -79,7 +79,8 @@ export default function Login() {
 
                 {/* Links abaixo */}
                 <div className="flex justify-between items-center mt-5 text-sm">
-                    <button className="text-blue-700 hover:underline">
+                    <button className="text-blue-700 hover:underline"
+                     onClick={() => navigate("/restaurarSenha")}>
                         Esqueceu sua senha?
                     </button>
 
